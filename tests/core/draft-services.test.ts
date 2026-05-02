@@ -100,7 +100,7 @@ describe('core draft helpers and services', () => {
       createDraftRenderer(),
     )
 
-    const generated = await service.generateDraft({
+    const generated = await service.generate({
       themeSlug: theme.slug,
       issueDate: '2026-05-02',
       config,
@@ -112,7 +112,7 @@ describe('core draft helpers and services', () => {
     expect(generated.subject).toBe(workflowResult.subject)
     expect(generated.renderedHtml).toContain('Tech Daily')
 
-    const approved = await service.approveDraft({
+    const approved = await service.approve({
       draftId: generated.id,
       now: '2026-05-02T09:00:00.000Z',
     })
@@ -158,7 +158,7 @@ describe('core draft helpers and services', () => {
       config.MAIL_FROM,
     )
 
-    const approved = await service.approveDraft({
+    const approved = await service.approve({
       themeSlug: theme.slug,
       issueDate: '2026-05-02',
       draftId: 'draft-1',
@@ -169,7 +169,7 @@ describe('core draft helpers and services', () => {
     expect(approved.approvedAt).toBe('2026-05-02T09:00:00.000Z')
     expect(approved.renderedHtml).toContain('Tech Daily v1')
 
-    const sent = await service.sendIssue({
+    const sent = await service.send({
       themeSlug: theme.slug,
       issueDate: '2026-05-02',
       draftId: 'draft-1',

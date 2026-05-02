@@ -4,14 +4,14 @@ import type { DraftRepository, SubscriberRepository, ThemeRepository } from '../
 import type { DraftRenderer, EmailSender } from '../ports/runtime.js'
 
 export interface SendService {
-  approveDraft(input: {
+  approve(input: {
     themeSlug: string
     issueDate: string
     draftId?: string
     version?: number
     now?: string
   }): Promise<NewsletterDraft>
-  sendIssue(input: {
+  send(input: {
     themeSlug: string
     issueDate: string
     draftId?: string
@@ -29,7 +29,7 @@ export function createSendService(
   mailFrom: string,
 ): SendService {
   return {
-    async approveDraft({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
+    async approve({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
       const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
       const selectedDraft = await resolveDraftSelection({
@@ -55,7 +55,7 @@ export function createSendService(
       return draftRepository.update(approvedDraft)
     },
 
-    async sendIssue({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
+    async send({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
       const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
       const selectedDraft = await resolveDraftSelection({ draftId, draftRepository, drafts, issueDate, themeId: theme.id, version })
