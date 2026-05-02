@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import type { Theme } from '../domain/theme.js'
 import type { ThemeRepository } from '../ports/repositories.js'
 import type { WorkflowRegistry } from '../ports/runtime.js'
@@ -21,17 +19,13 @@ export function createThemeService(
   workflowRegistry: WorkflowRegistry,
 ): ThemeService {
   return {
-    async createTheme({ slug, name, workflowName, now = new Date().toISOString() }) {
+    async createTheme({ slug, name, workflowName }) {
       assertWorkflowExists(workflowRegistry, workflowName)
 
       return themeRepository.create({
-        id: randomUUID(),
         slug,
         name,
         workflowName,
-        enabled: true,
-        createdAt: now,
-        updatedAt: now,
       })
     },
 
@@ -54,11 +48,10 @@ export function createThemeService(
         assertWorkflowExists(workflowRegistry, workflowName)
       }
 
-      return themeRepository.update({
-        ...existingTheme,
-        name: name ?? existingTheme.name,
-        workflowName: workflowName ?? existingTheme.workflowName,
-        enabled: enabled ?? existingTheme.enabled,
+      return themeRepository.updateBySlug(slug, {
+        ...(name !== undefined ? { name } : {}),
+        ...(workflowName !== undefined ? { workflowName } : {}),
+        ...(enabled !== undefined ? { enabled } : {}),
         updatedAt: now,
       })
     },

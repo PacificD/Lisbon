@@ -24,24 +24,16 @@ function mapThemeRow(row: ThemeRow): Theme {
   }
 }
 
-function mapTheme(theme: Theme): ThemeRow {
-  return {
-    id: theme.id,
-    slug: theme.slug,
-    name: theme.name,
-    workflow_name: theme.workflowName,
-    enabled: theme.enabled,
-    created_at: theme.createdAt,
-    updated_at: theme.updatedAt,
-  }
-}
-
 export function createThemeRepository(client: SupabaseClient): ThemeRepository {
   return {
-    async create(theme) {
+    async create(input) {
       const { data, error } = await client
         .from('themes')
-        .insert(mapTheme(theme))
+        .insert({
+          slug: input.slug,
+          name: input.name,
+          workflow_name: input.workflowName,
+        })
         .select()
         .single()
 
@@ -79,11 +71,16 @@ export function createThemeRepository(client: SupabaseClient): ThemeRepository {
       return (data as ThemeRow[]).map(mapThemeRow)
     },
 
-    async update(theme) {
+    async updateBySlug(slug, patch) {
       const { data, error } = await client
         .from('themes')
-        .update(mapTheme(theme))
-        .eq('id', theme.id)
+        .update({
+          ...(patch.name !== undefined ? { name: patch.name } : {}),
+          ...(patch.workflowName !== undefined ? { workflow_name: patch.workflowName } : {}),
+          ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
+          updated_at: patch.updatedAt ?? new Date().toISOString(),
+        })
+        .eq('slug', slug)
         .select()
         .single()
 

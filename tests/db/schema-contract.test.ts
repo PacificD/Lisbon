@@ -43,16 +43,16 @@ describe('db package contract', () => {
     expect(themeRepository.create).toBeTypeOf('function')
     expect(themeRepository.findBySlug).toBeTypeOf('function')
     expect(themeRepository.list).toBeTypeOf('function')
-    expect(themeRepository.update).toBeTypeOf('function')
+    expect(themeRepository.updateBySlug).toBeTypeOf('function')
 
     expect(subscriberRepository.add).toBeTypeOf('function')
     expect(subscriberRepository.listByTheme).toBeTypeOf('function')
     expect(subscriberRepository.remove).toBeTypeOf('function')
 
     expect(draftRepository.create).toBeTypeOf('function')
-    expect(draftRepository.listByThemeAndIssueDate).toBeTypeOf('function')
+    expect(draftRepository.findByThemeAndDate).toBeTypeOf('function')
     expect(draftRepository.findById).toBeTypeOf('function')
-    expect(draftRepository.update).toBeTypeOf('function')
+    expect(draftRepository.updateStatus).toBeTypeOf('function')
   })
 
   it('declares the required schema, constraints, and draft send guard', async () => {

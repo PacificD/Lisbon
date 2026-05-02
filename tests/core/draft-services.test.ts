@@ -240,13 +240,13 @@ describe('core draft helpers and services', () => {
       async create() {
         throw new Error('not used in test')
       },
-      async listByThemeAndIssueDate() {
+      async findByThemeAndDate() {
         return [sentDraft]
       },
       async findById(id) {
         return id === sentDraft.id ? sentDraft : null
       },
-      async update() {
+      async updateStatus() {
         updateCalls += 1
         throw new Error('database write failed')
       },
@@ -292,7 +292,7 @@ describe('core draft helpers and services', () => {
         async list() {
           return [existingTheme]
         },
-        async update() {
+        async updateBySlug() {
           throw new Error('should not persist invalid workflow names')
         },
       },
@@ -329,14 +329,18 @@ function createDraftRepository(initialDrafts: NewsletterDraft[]): DraftRepositor
       records.push(draft)
       return draft
     },
-    async listByThemeAndIssueDate(themeId, issueDate) {
+    async findByThemeAndDate(themeId, issueDate) {
       return records.filter((draft) => draft.themeId === themeId && draft.issueDate === issueDate)
     },
     async findById(id) {
       return records.find((draft) => draft.id === id) ?? null
     },
-    async update(updatedDraft) {
-      const index = records.findIndex((draft) => draft.id === updatedDraft.id)
+    async updateStatus(id, input) {
+      const index = records.findIndex((draft) => draft.id === id)
+      const updatedDraft = {
+        ...records[index],
+        ...input,
+      }
       records[index] = updatedDraft
       return updatedDraft
     },
@@ -362,7 +366,7 @@ function createThemeRepository(): ThemeRepository {
     async list() {
       return [theme]
     },
-    async update() {
+    async updateBySlug() {
       throw new Error('not used in test')
     },
   }

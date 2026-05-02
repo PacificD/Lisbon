@@ -31,7 +31,7 @@ export function createSendService(
   return {
     async approve({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
-      const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
+      const drafts = await draftRepository.findByThemeAndDate(theme.id, issueDate)
       const selectedDraft = await resolveApprovalSelection({
         draftId,
         draftRepository,
@@ -52,12 +52,18 @@ export function createSendService(
         now,
       )
 
-      return draftRepository.update(approvedDraft)
+      return draftRepository.updateStatus(approvedDraft.id, {
+        status: approvedDraft.status,
+        renderedHtml: approvedDraft.renderedHtml,
+        approvedAt: approvedDraft.approvedAt,
+        errorMessage: approvedDraft.errorMessage,
+        updatedAt: approvedDraft.updatedAt,
+      })
     },
 
     async send({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
-      const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
+      const drafts = await draftRepository.findByThemeAndDate(theme.id, issueDate)
       const selectedDraft = await resolveDraftSelection({ draftId, draftRepository, drafts, issueDate, themeId: theme.id, version })
       ensureSendAllowed(drafts, selectedDraft)
 
@@ -82,15 +88,28 @@ export function createSendService(
           errorMessage: error instanceof Error ? error.message : 'Unknown send failure',
         })
 
-        await draftRepository.update(failedDraft)
+        await draftRepository.updateStatus(failedDraft.id, {
+          status: failedDraft.status,
+          errorMessage: failedDraft.errorMessage,
+          updatedAt: failedDraft.updatedAt,
+        })
         throw error
       }
 
-      return draftRepository.update(markDraftSent(selectedDraft, {
+      const sentDraft = markDraftSent(selectedDraft, {
         now,
         provider: sendResult.provider,
         providerMessageId: sendResult.providerMessageId,
-      }))
+      })
+
+      return draftRepository.updateStatus(sentDraft.id, {
+        status: sentDraft.status,
+        sentAt: sentDraft.sentAt,
+        sendProvider: sentDraft.sendProvider,
+        providerMessageId: sentDraft.providerMessageId,
+        errorMessage: sentDraft.errorMessage,
+        updatedAt: sentDraft.updatedAt,
+      })
     },
   }
 }

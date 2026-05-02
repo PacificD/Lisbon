@@ -18,21 +18,15 @@ function mapSubscriberRow(row: ThemeSubscriberRow): ThemeSubscriber {
   }
 }
 
-function mapSubscriber(subscriber: ThemeSubscriber): ThemeSubscriberRow {
-  return {
-    id: subscriber.id,
-    theme_id: subscriber.themeId,
-    email: subscriber.email,
-    created_at: subscriber.createdAt,
-  }
-}
-
 export function createSubscriberRepository(client: SupabaseClient): SubscriberRepository {
   return {
-    async add(subscriber) {
+    async add(themeId, email) {
       const { data, error } = await client
         .from('theme_subscribers')
-        .insert(mapSubscriber(subscriber))
+        .insert({
+          theme_id: themeId,
+          email,
+        })
         .select()
         .single()
 

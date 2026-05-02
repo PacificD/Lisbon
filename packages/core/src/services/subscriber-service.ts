@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import type { ThemeSubscriber } from '../domain/subscriber.js'
 import type { SubscriberRepository, ThemeRepository } from '../ports/repositories.js'
 
@@ -14,15 +12,9 @@ export function createSubscriberService(
   subscriberRepository: SubscriberRepository,
 ): SubscriberService {
   return {
-    async addSubscriber({ themeSlug, email, now = new Date().toISOString() }) {
+    async addSubscriber({ themeSlug, email }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
-
-      return subscriberRepository.add({
-        id: randomUUID(),
-        themeId: theme.id,
-        email,
-        createdAt: now,
-      })
+      return subscriberRepository.add(theme.id, email)
     },
 
     async listSubscribers({ themeSlug }) {

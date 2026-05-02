@@ -33,7 +33,7 @@ export function createDraftService(
         throw new Error(`Workflow ${theme.workflowName} is not registered.`)
       }
 
-      const existingDrafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
+      const existingDrafts = await draftRepository.findByThemeAndDate(theme.id, issueDate)
       const result = await workflow.run({ theme, issueDate, config })
       const renderedHtml = await draftRenderer.renderHtml({ theme, result })
 
@@ -64,12 +64,19 @@ export function createDraftService(
         throw new Error(`Draft ${draftId} was not found.`)
       }
 
-      return draftRepository.update(approveDraft(draft, now))
+      const approvedDraft = approveDraft(draft, now)
+
+      return draftRepository.updateStatus(draft.id, {
+        status: approvedDraft.status,
+        approvedAt: approvedDraft.approvedAt,
+        errorMessage: approvedDraft.errorMessage,
+        updatedAt: approvedDraft.updatedAt,
+      })
     },
 
     async list({ themeSlug, issueDate }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
-      return draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
+      return draftRepository.findByThemeAndDate(theme.id, issueDate)
     },
   }
 }

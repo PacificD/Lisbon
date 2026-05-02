@@ -80,7 +80,7 @@ export function createDraftRepository(client: SupabaseClient): DraftRepository {
       return mapDraftRow(data as NewsletterDraftRow)
     },
 
-    async listByThemeAndIssueDate(themeId, issueDate) {
+    async findByThemeAndDate(themeId, issueDate) {
       const { data, error } = await client
         .from('newsletter_drafts')
         .select()
@@ -109,11 +109,20 @@ export function createDraftRepository(client: SupabaseClient): DraftRepository {
       return data ? mapDraftRow(data as NewsletterDraftRow) : null
     },
 
-    async update(draft) {
+    async updateStatus(id, input) {
       const { data, error } = await client
         .from('newsletter_drafts')
-        .update(mapDraft(draft))
-        .eq('id', draft.id)
+        .update({
+          status: input.status,
+          ...(input.renderedHtml !== undefined ? { rendered_html: input.renderedHtml } : {}),
+          ...(input.approvedAt !== undefined ? { approved_at: input.approvedAt } : {}),
+          ...(input.sentAt !== undefined ? { sent_at: input.sentAt } : {}),
+          ...(input.sendProvider !== undefined ? { send_provider: input.sendProvider } : {}),
+          ...(input.providerMessageId !== undefined ? { provider_message_id: input.providerMessageId } : {}),
+          ...(input.errorMessage !== undefined ? { error_message: input.errorMessage } : {}),
+          updated_at: input.updatedAt ?? new Date().toISOString(),
+        })
+        .eq('id', id)
         .select()
         .single()
 
