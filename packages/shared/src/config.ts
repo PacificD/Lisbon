@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
-function isValidIanaTimeZone(value: string): boolean {
+function isValidTimeZone(value: string): boolean {
   try {
-    return Intl.supportedValuesOf('timeZone').includes(value)
+    new Intl.DateTimeFormat('en-US', { timeZone: value }).format()
+    return true
   } catch {
     return false
   }
@@ -17,7 +18,7 @@ export const newsletterConfigSchema = z.object({
   DEFAULT_ISSUE_DATE_TIMEZONE: z
     .string()
     .min(1)
-    .refine(isValidIanaTimeZone, 'Expected a valid IANA time zone')
+    .refine(isValidTimeZone, 'Expected a valid time zone')
     .default('Asia/Shanghai'),
 })
 
