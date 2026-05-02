@@ -1,12 +1,12 @@
-import type { WorkflowDefinition } from './types.js'
+import type { WorkflowInput, WorkflowModule } from './types.js'
 
-export const frontendDailyWorkflow: WorkflowDefinition = {
+export const frontendDailyWorkflow: WorkflowModule = {
   metadata: {
     name: 'frontend-daily',
     displayName: 'Frontend Daily',
     description: 'Curated frontend links for the daily Lisbon newsletter issue.',
   },
-  async run({ issueDate }) {
+  async run({ issueDate }: WorkflowInput) {
     return {
       subject: `Frontend Daily for ${issueDate}`,
       previewText: 'Three frontend links worth reviewing today.',

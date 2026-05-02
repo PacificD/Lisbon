@@ -6,6 +6,8 @@ export interface WorkflowMetadata {
   description: string
 }
 
-export interface WorkflowDefinition extends WorkflowRunner {
+export type WorkflowInput = Parameters<WorkflowRunner['run']>[0]
+
+export interface WorkflowModule extends WorkflowRunner {
   metadata: WorkflowMetadata
 }
