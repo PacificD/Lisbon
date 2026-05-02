@@ -1,0 +1,40 @@
+create extension if not exists pgcrypto;
+
+create table if not exists themes (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  workflow_name text not null,
+  enabled boolean not null default true,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists theme_subscribers (
+  id uuid primary key default gen_random_uuid(),
+  theme_id uuid not null references themes(id) on delete cascade,
+  email text not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  unique (theme_id, email)
+);
+
+create table if not exists newsletter_drafts (
+  id uuid primary key default gen_random_uuid(),
+  theme_id uuid not null references themes(id) on delete cascade,
+  issue_date date not null,
+  version integer not null check (version > 0),
+  status text not null check (status in ('draft', 'approved', 'sent', 'failed')),
+  subject text not null,
+  preview_text text not null,
+  draft_payload_json jsonb not null,
+  rendered_html text not null,
+  approved_at timestamptz,
+  sent_at timestamptz,
+  send_provider text,
+  provider_message_id text,
+  error_message text,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create unique index if not exists newsletter_drafts_one_sent_per_issue_idx on newsletter_drafts (theme_id, issue_date) where status = 'sent';
