@@ -4,7 +4,7 @@ export function getNextDraftVersion(drafts: NewsletterDraft[]): number {
   return drafts.reduce((maxVersion, draft) => Math.max(maxVersion, draft.version), 0) + 1
 }
 
-export function selectLatestApprovedDraft(drafts: NewsletterDraft[]): NewsletterDraft | null {
+export function pickLatestApprovedDraft(drafts: NewsletterDraft[]): NewsletterDraft | null {
   const approvedDrafts = drafts.filter((draft) => draft.status === 'approved')
 
   if (approvedDrafts.length === 0) {
@@ -14,10 +14,6 @@ export function selectLatestApprovedDraft(drafts: NewsletterDraft[]): Newsletter
   return approvedDrafts.reduce((latestDraft, draft) =>
     draft.version > latestDraft.version ? draft : latestDraft,
   )
-}
-
-export function hasSentDraft(drafts: NewsletterDraft[]): boolean {
-  return drafts.some((draft) => draft.status === 'sent')
 }
 
 export function approveDraft(draft: NewsletterDraft, now: string): NewsletterDraft {
@@ -50,6 +46,23 @@ export function markDraftSent(
     providerMessageId: input.providerMessageId,
     errorMessage: null,
     updatedAt: input.now,
+  }
+}
+
+export function ensureSendAllowed(drafts: NewsletterDraft[], targetDraft: NewsletterDraft): void {
+  if (targetDraft.status !== 'approved') {
+    throw new Error(`Only approved drafts can be sent. Received ${targetDraft.status}.`)
+  }
+
+  const alreadySent = drafts.some(
+    (draft) =>
+      draft.status === 'sent' &&
+      draft.themeId === targetDraft.themeId &&
+      draft.issueDate === targetDraft.issueDate,
+  )
+
+  if (alreadySent) {
+    throw new Error(`A newsletter for ${targetDraft.themeId} on ${targetDraft.issueDate} has already been sent.`)
   }
 }
 

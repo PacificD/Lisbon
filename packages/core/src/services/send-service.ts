@@ -1,11 +1,16 @@
-import type { NewsletterConfig } from '@lisbon/shared'
-
 import type { NewsletterDraft } from '../domain/draft.js'
-import { hasSentDraft, markDraftFailed, markDraftSent, selectLatestApprovedDraft } from '../lib/draft-state.js'
+import { approveDraft as approveDraftState, ensureSendAllowed, markDraftFailed, markDraftSent, pickLatestApprovedDraft } from '../lib/draft-state.js'
 import type { DraftRepository, SubscriberRepository, ThemeRepository } from '../ports/repositories.js'
-import type { EmailSender } from '../ports/runtime.js'
+import type { DraftRenderer, EmailSender } from '../ports/runtime.js'
 
 export interface SendService {
+  approveDraft(input: {
+    themeSlug: string
+    issueDate: string
+    draftId?: string
+    version?: number
+    now?: string
+  }): Promise<NewsletterDraft>
   sendIssue(input: {
     themeSlug: string
     issueDate: string
@@ -15,35 +20,52 @@ export interface SendService {
   }): Promise<NewsletterDraft>
 }
 
-export function createSendService(input: {
-  config: NewsletterConfig
-  draftRepository: DraftRepository
-  emailSender: EmailSender
-  subscriberRepository: SubscriberRepository
-  themeRepository: ThemeRepository
-}): SendService {
-  const { config, draftRepository, emailSender, subscriberRepository, themeRepository } = input
-
+export function createSendService(
+  themeRepository: ThemeRepository,
+  subscriberRepository: SubscriberRepository,
+  draftRepository: DraftRepository,
+  emailSender: EmailSender,
+  draftRenderer: DraftRenderer,
+  mailFrom: string,
+): SendService {
   return {
+    async approveDraft({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
+      const theme = await getThemeBySlug(themeRepository, themeSlug)
+      const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
+      const selectedDraft = await resolveDraftSelection({
+        draftId,
+        draftRepository,
+        drafts,
+        issueDate,
+        themeId: theme.id,
+        version,
+      })
+
+      const approvedDraft = approveDraftState(
+        {
+          ...selectedDraft,
+          renderedHtml: draftRenderer.render({
+            theme,
+            result: selectedDraft.draftPayload,
+          }),
+        },
+        now,
+      )
+
+      return draftRepository.update(approvedDraft)
+    },
+
     async sendIssue({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
       const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
-
-      if (hasSentDraft(drafts)) {
-        throw new Error(`A newsletter for ${theme.slug} on ${issueDate} has already been sent.`)
-      }
-
       const selectedDraft = await resolveDraftSelection({ draftId, draftRepository, drafts, issueDate, themeId: theme.id, version })
-
-      if (selectedDraft.status !== 'approved') {
-        throw new Error(`Draft ${selectedDraft.id} must be approved before sending.`)
-      }
+      ensureSendAllowed(drafts, selectedDraft)
 
       const subscribers = await subscriberRepository.listByTheme(theme.id)
 
       try {
         const result = await emailSender.send({
-          from: config.MAIL_FROM,
+          from: mailFrom,
           to: subscribers.map((subscriber) => subscriber.email),
           subject: selectedDraft.subject,
           html: selectedDraft.renderedHtml,
@@ -103,7 +125,7 @@ async function resolveDraftSelection(input: {
     return draft
   }
 
-  const latestApprovedDraft = selectLatestApprovedDraft(drafts)
+  const latestApprovedDraft = pickLatestApprovedDraft(drafts)
 
   if (!latestApprovedDraft) {
     throw new Error(`No approved draft exists for issue ${issueDate}.`)

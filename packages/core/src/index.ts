@@ -3,11 +3,11 @@ export type { ThemeSubscriber } from './domain/subscriber.js'
 export type { Theme } from './domain/theme.js'
 export {
   approveDraft,
+  ensureSendAllowed,
   getNextDraftVersion,
-  hasSentDraft,
   markDraftFailed,
   markDraftSent,
-  selectLatestApprovedDraft,
+  pickLatestApprovedDraft,
 } from './lib/draft-state.js'
 export type { DraftRepository, SubscriberRepository, ThemeRepository } from './ports/repositories.js'
 export type { DraftRenderer, EmailSender, WorkflowRegistry, WorkflowRunner } from './ports/runtime.js'

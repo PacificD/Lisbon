@@ -8,22 +8,24 @@ import type { DraftRepository, ThemeRepository } from '../ports/repositories.js'
 import type { DraftRenderer, WorkflowRegistry } from '../ports/runtime.js'
 
 export interface DraftService {
-  generateDraft(input: { themeSlug: string; issueDate: string; now?: string }): Promise<NewsletterDraft>
+  generateDraft(input: {
+    themeSlug: string
+    issueDate: string
+    config: NewsletterConfig
+    now?: string
+  }): Promise<NewsletterDraft>
   approveDraft(input: { draftId: string; now?: string }): Promise<NewsletterDraft>
   listDrafts(input: { themeSlug: string; issueDate: string }): Promise<NewsletterDraft[]>
 }
 
-export function createDraftService(input: {
-  config: NewsletterConfig
-  draftRenderer: DraftRenderer
-  draftRepository: DraftRepository
-  themeRepository: ThemeRepository
-  workflowRegistry: WorkflowRegistry
-}): DraftService {
-  const { config, draftRenderer, draftRepository, themeRepository, workflowRegistry } = input
-
+export function createDraftService(
+  themeRepository: ThemeRepository,
+  draftRepository: DraftRepository,
+  workflowRegistry: WorkflowRegistry,
+  draftRenderer: DraftRenderer,
+): DraftService {
   return {
-    async generateDraft({ themeSlug, issueDate, now = new Date().toISOString() }) {
+    async generateDraft({ themeSlug, issueDate, config, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
       const workflow = workflowRegistry.getWorkflow(theme.workflowName)
 

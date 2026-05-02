@@ -5,13 +5,16 @@ import type { NewsletterConfig, WorkflowResult } from '@lisbon/shared'
 import {
   createDraftService,
   createSendService,
+  ensureSendAllowed,
   getNextDraftVersion,
-  selectLatestApprovedDraft,
+  pickLatestApprovedDraft,
 } from '../../packages/core/src/index.ts'
 import type {
   DraftRenderer,
   DraftRepository,
+  EmailSender,
   NewsletterDraft,
+  SubscriberRepository,
   Theme,
   ThemeRepository,
   WorkflowRegistry,
@@ -52,16 +55,26 @@ const workflowResult: WorkflowResult = {
 }
 
 describe('core draft helpers and services', () => {
-  it('computes the next version and picks the latest approved draft', () => {
+  it('computes the next version, picks the latest approved draft, and rejects duplicate sends', () => {
     const drafts = [
       makeDraft({ id: 'draft-1', version: 1, status: 'draft' }),
       makeDraft({ id: 'draft-2', version: 2, status: 'approved' }),
       makeDraft({ id: 'draft-3', version: 3, status: 'failed' }),
       makeDraft({ id: 'draft-4', version: 4, status: 'approved' }),
+      makeDraft({
+        id: 'draft-5',
+        version: 5,
+        status: 'sent',
+        approvedAt: '2026-05-02T09:00:00.000Z',
+        sentAt: '2026-05-02T10:00:00.000Z',
+        sendProvider: 'resend',
+        providerMessageId: 'msg-1',
+      }),
     ]
 
-    expect(getNextDraftVersion(drafts)).toBe(5)
-    expect(selectLatestApprovedDraft(drafts)?.id).toBe('draft-4')
+    expect(getNextDraftVersion(drafts)).toBe(6)
+    expect(pickLatestApprovedDraft(drafts)?.id).toBe('draft-4')
+    expect(() => ensureSendAllowed(drafts, drafts[1])).toThrow('already been sent')
   })
 
   it('generates a new draft with the next version and approves it', async () => {
@@ -71,28 +84,10 @@ describe('core draft helpers and services', () => {
     ]
 
     const draftRepository = createDraftRepository(existingDrafts)
-    const service = createDraftService({
-      config,
-      draftRenderer: {
-        render: ({ theme: currentTheme, result }) =>
-          `<article data-theme="${currentTheme.slug}">${result.subject}</article>`,
-      },
+    const service = createDraftService(
+      createThemeRepository(),
       draftRepository,
-      themeRepository: {
-        async create() {
-          throw new Error('not used in test')
-        },
-        async findBySlug(slug) {
-          return slug === theme.slug ? theme : null
-        },
-        async list() {
-          return [theme]
-        },
-        async update() {
-          throw new Error('not used in test')
-        },
-      },
-      workflowRegistry: createWorkflowRegistry({
+      createWorkflowRegistry({
         metadata: {
           name: theme.workflowName,
           displayName: 'Tech Daily',
@@ -102,11 +97,13 @@ describe('core draft helpers and services', () => {
           return workflowResult
         },
       }),
-    })
+      createDraftRenderer(),
+    )
 
     const generated = await service.generateDraft({
       themeSlug: theme.slug,
       issueDate: '2026-05-02',
+      config,
       now: '2026-05-02T08:00:00.000Z',
     })
 
@@ -125,66 +122,69 @@ describe('core draft helpers and services', () => {
     expect(draftRepository.records.at(-1)?.status).toBe('approved')
   })
 
-  it('rejects sending when an issue for the same theme and date was already sent', async () => {
+  it('approves a selected draft and then sends that issue through send service', async () => {
     let sendCalls = 0
+    let sentMessage: Parameters<EmailSender['send']>[0] | undefined
     const draftRepository = createDraftRepository([
-      makeDraft({ id: 'draft-1', version: 1, status: 'approved', approvedAt: '2026-05-02T08:00:00.000Z' }),
+      makeDraft({
+        id: 'draft-1',
+        version: 1,
+        status: 'draft',
+        subject: 'Tech Daily v1',
+        previewText: 'Preview v1',
+      }),
       makeDraft({
         id: 'draft-2',
         version: 2,
-        status: 'sent',
-        approvedAt: '2026-05-02T09:00:00.000Z',
-        sentAt: '2026-05-02T10:00:00.000Z',
-        sendProvider: 'resend',
-        providerMessageId: 'msg-1',
+        status: 'approved',
+        approvedAt: '2026-05-02T08:30:00.000Z',
+        subject: 'Tech Daily v2',
+        previewText: 'Preview v2',
       }),
     ])
 
-    const service = createSendService({
-      config,
+    const service = createSendService(
+      createThemeRepository(),
+      createSubscriberRepository(),
       draftRepository,
-      emailSender: {
-        async send() {
+      {
+        async send(message) {
           sendCalls += 1
+          sentMessage = message
           return { providerMessageId: 'msg-2' }
         },
       },
-      subscriberRepository: {
-        async add() {
-          throw new Error('not used in test')
-        },
-        async listByTheme() {
-          return [{ id: 'subscriber-1', themeId: theme.id, email: 'reader@example.com', createdAt: '2026-05-02T00:00:00.000Z' }]
-        },
-        async remove() {
-          throw new Error('not used in test')
-        },
-      },
-      themeRepository: {
-        async create() {
-          throw new Error('not used in test')
-        },
-        async findBySlug(slug) {
-          return slug === theme.slug ? theme : null
-        },
-        async list() {
-          return [theme]
-        },
-        async update() {
-          throw new Error('not used in test')
-        },
-      },
+      createDraftRenderer(),
+      config.MAIL_FROM,
+    )
+
+    const approved = await service.approveDraft({
+      themeSlug: theme.slug,
+      issueDate: '2026-05-02',
+      draftId: 'draft-1',
+      now: '2026-05-02T09:00:00.000Z',
     })
 
-    await expect(
-      service.sendIssue({
-        themeSlug: theme.slug,
-        issueDate: '2026-05-02',
-        now: '2026-05-02T11:00:00.000Z',
-      }),
-    ).rejects.toThrow('already been sent')
+    expect(approved.status).toBe('approved')
+    expect(approved.approvedAt).toBe('2026-05-02T09:00:00.000Z')
+    expect(approved.renderedHtml).toContain('Tech Daily v1')
 
-    expect(sendCalls).toBe(0)
+    const sent = await service.sendIssue({
+      themeSlug: theme.slug,
+      issueDate: '2026-05-02',
+      draftId: 'draft-1',
+      now: '2026-05-02T11:00:00.000Z',
+    })
+
+    expect(sent.status).toBe('sent')
+    expect(sent.id).toBe('draft-1')
+    expect(sendCalls).toBe(1)
+    expect(sentMessage).toEqual({
+      from: config.MAIL_FROM,
+      to: ['reader@example.com'],
+      subject: 'Tech Daily v1',
+      html: '<article data-theme="tech">Tech Daily v1</article>',
+    })
   })
 })
 
@@ -221,16 +221,62 @@ function createWorkflowRegistry(workflow: WorkflowRunner): WorkflowRegistry {
   }
 }
 
+function createThemeRepository(): ThemeRepository {
+  return {
+    async create() {
+      throw new Error('not used in test')
+    },
+    async findBySlug(slug) {
+      return slug === theme.slug ? theme : null
+    },
+    async list() {
+      return [theme]
+    },
+    async update() {
+      throw new Error('not used in test')
+    },
+  }
+}
+
+function createSubscriberRepository(): SubscriberRepository {
+  return {
+    async add() {
+      throw new Error('not used in test')
+    },
+    async listByTheme() {
+      return [{ id: 'subscriber-1', themeId: theme.id, email: 'reader@example.com', createdAt: '2026-05-02T00:00:00.000Z' }]
+    },
+    async remove() {
+      throw new Error('not used in test')
+    },
+  }
+}
+
+function createDraftRenderer(): DraftRenderer {
+  return {
+    render: ({ theme: currentTheme, result }) =>
+      `<article data-theme="${currentTheme.slug}">${result.subject}</article>`,
+  }
+}
+
 function makeDraft(overrides: Partial<NewsletterDraft> = {}): NewsletterDraft {
+  const subject = overrides.subject ?? workflowResult.subject
+  const previewText = overrides.previewText ?? workflowResult.previewText
+  const draftPayload = overrides.draftPayload ?? {
+    ...workflowResult,
+    subject,
+    previewText,
+  }
+
   return {
     id: overrides.id ?? 'draft-default',
     themeId: overrides.themeId ?? theme.id,
     issueDate: overrides.issueDate ?? '2026-05-02',
     version: overrides.version ?? 1,
     status: overrides.status ?? 'draft',
-    subject: overrides.subject ?? workflowResult.subject,
-    previewText: overrides.previewText ?? workflowResult.previewText,
-    draftPayload: overrides.draftPayload ?? workflowResult,
+    subject,
+    previewText,
+    draftPayload,
     renderedHtml: overrides.renderedHtml ?? '<article>Tech Daily</article>',
     approvedAt: overrides.approvedAt ?? null,
     sentAt: overrides.sentAt ?? null,

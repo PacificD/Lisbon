@@ -16,12 +16,10 @@ export interface ThemeService {
   }): Promise<Theme>
 }
 
-export function createThemeService(input: {
-  themeRepository: ThemeRepository
-  workflowRegistry: WorkflowRegistry
-}): ThemeService {
-  const { themeRepository, workflowRegistry } = input
-
+export function createThemeService(
+  themeRepository: ThemeRepository,
+  workflowRegistry: WorkflowRegistry,
+): ThemeService {
   return {
     async createTheme({ slug, name, workflowName, now = new Date().toISOString() }) {
       assertWorkflowExists(workflowRegistry, workflowName)

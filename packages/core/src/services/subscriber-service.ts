@@ -9,12 +9,10 @@ export interface SubscriberService {
   removeSubscriber(input: { themeSlug: string; email: string }): Promise<void>
 }
 
-export function createSubscriberService(input: {
-  subscriberRepository: SubscriberRepository
-  themeRepository: ThemeRepository
-}): SubscriberService {
-  const { subscriberRepository, themeRepository } = input
-
+export function createSubscriberService(
+  themeRepository: ThemeRepository,
+  subscriberRepository: SubscriberRepository,
+): SubscriberService {
   return {
     async addSubscriber({ themeSlug, email, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
