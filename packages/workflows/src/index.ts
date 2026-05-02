@@ -5,7 +5,11 @@ import type { WorkflowModule } from './types.js'
 
 const defaultWorkflows = [frontendDailyWorkflow]
 
-export function createWorkflowRegistry(workflows: WorkflowModule[] = defaultWorkflows): WorkflowRegistry {
+export interface RegisteredWorkflowRegistry extends WorkflowRegistry {
+  getWorkflow(name: string): WorkflowModule
+}
+
+export function createWorkflowRegistry(workflows: WorkflowModule[] = defaultWorkflows): RegisteredWorkflowRegistry {
   const byName = new Map<string, WorkflowModule>()
 
   for (const workflow of workflows) {
@@ -18,10 +22,17 @@ export function createWorkflowRegistry(workflows: WorkflowModule[] = defaultWork
 
   return {
     getWorkflow(name) {
-      return byName.get(name)
+      const workflow = byName.get(name)
+
+      if (!workflow) {
+        throw new Error(`Workflow ${name} is not registered.`)
+      }
+
+      return workflow
     },
   }
 }
 
+export const workflowRegistry = createWorkflowRegistry()
 export { frontendDailyWorkflow } from './frontend-daily.js'
 export type { WorkflowInput, WorkflowMetadata, WorkflowModule } from './types.js'

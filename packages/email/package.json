@@ -13,6 +13,7 @@
     "@lisbon/core": "workspace:*",
     "@lisbon/shared": "workspace:*",
     "@react-email/components": "^1.0.1",
+    "@react-email/render": "^2.0.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   }

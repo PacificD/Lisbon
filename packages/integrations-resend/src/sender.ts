@@ -43,7 +43,14 @@ export function createResendEmailSender(input: {
         throw new Error('Resend did not return a provider message id.')
       }
 
-      return { providerMessageId }
+      return {
+        provider: 'resend',
+        providerMessageId,
+      }
     },
   }
+}
+
+export function createResendSender(apiKey: string): EmailSender {
+  return createResendEmailSender({ apiKey })
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { NewsletterConfig } from '@lisbon/shared'
 import { workflowResultSchema } from '@lisbon/shared'
 
-import { createWorkflowRegistry, frontendDailyWorkflow } from '../../packages/workflows/src/index.ts'
+import { frontendDailyWorkflow, workflowRegistry } from '../../packages/workflows/src/index.ts'
 
 const config: NewsletterConfig = {
   SUPABASE_URL: 'https://example.supabase.co',
@@ -15,11 +15,10 @@ const config: NewsletterConfig = {
 }
 
 describe('frontend daily workflow contract', () => {
-  it('registers the frontend daily workflow and returns a valid workflow result', async () => {
-    const registry = createWorkflowRegistry()
-    const workflow = registry.getWorkflow(frontendDailyWorkflow.metadata.name)
+  it('exports the frontend daily workflow from the planned registry shape and returns a valid workflow result', async () => {
+    const workflow = workflowRegistry.getWorkflow(frontendDailyWorkflow.metadata.name)
 
-    expect(workflow?.metadata).toEqual({
+    expect(workflow.metadata).toEqual({
       name: 'frontend-daily',
       displayName: 'Frontend Daily',
       description: 'Curated frontend links for the daily Lisbon newsletter issue.',
@@ -46,5 +45,11 @@ describe('frontend daily workflow contract', () => {
     })
     expect(result.items).toHaveLength(3)
     expect(result.items.every((item) => item.source.length > 0)).toBe(true)
+  })
+
+  it('fails lookup for unknown workflows instead of returning undefined', () => {
+    expect(() => workflowRegistry.getWorkflow('missing-workflow')).toThrow(
+      'Workflow missing-workflow is not registered.',
+    )
   })
 })
