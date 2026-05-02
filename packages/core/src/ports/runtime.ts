@@ -1,5 +1,5 @@
-import type { NewsletterConfig } from '../../../shared/src/config.ts'
-import type { WorkflowResult } from '../../../shared/src/types.ts'
+import type { NewsletterConfig } from '@lisbon/shared/config'
+import type { WorkflowResult } from '@lisbon/shared/types'
 import type { Theme } from '../domain/theme.ts'
 
 export interface WorkflowRunner {

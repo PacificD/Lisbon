@@ -1,4 +1,4 @@
-import type { DraftStatus, WorkflowResult } from '../../../shared/src/types.ts'
+import type { DraftStatus, WorkflowResult } from '@lisbon/shared/types'
 
 export interface NewsletterDraft {
   id: string

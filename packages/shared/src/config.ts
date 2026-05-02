@@ -1,12 +1,24 @@
 import { z } from 'zod'
 
+function isValidIanaTimeZone(value: string): boolean {
+  try {
+    return Intl.supportedValuesOf('timeZone').includes(value)
+  } catch {
+    return false
+  }
+}
+
 export const newsletterConfigSchema = z.object({
   SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   RESEND_API_KEY: z.string().min(1),
   MAIL_FROM: z.string().min(1),
   PREVIEW_OUTPUT_DIR: z.string().min(1),
-  DEFAULT_ISSUE_DATE_TIMEZONE: z.string().min(1).default('Asia/Shanghai'),
+  DEFAULT_ISSUE_DATE_TIMEZONE: z
+    .string()
+    .min(1)
+    .refine(isValidIanaTimeZone, 'Expected a valid IANA time zone')
+    .default('Asia/Shanghai'),
 })
 
 export type NewsletterConfig = z.infer<typeof newsletterConfigSchema>
