@@ -1,5 +1,4 @@
-import type { NewsletterConfig } from '@lisbon/shared/config'
-import type { WorkflowResult } from '@lisbon/shared/types'
+import type { NewsletterConfig, WorkflowResult } from '@lisbon/shared'
 import type { Theme } from '../domain/theme.js'
 
 export interface WorkflowRunner {

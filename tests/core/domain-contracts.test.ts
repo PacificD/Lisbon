@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { draftStatusSchema, workflowResultSchema } from '../../packages/shared/src/schemas.js'
+import { draftStatusSchema, workflowResultSchema } from '@lisbon/shared'
 
 describe('shared contract schemas', () => {
   it('parses a valid workflow result', () => {

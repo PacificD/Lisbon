@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@lisbon/shared':
+        specifier: workspace:*
+        version: link:packages/shared
       '@types/node':
         specifier: ^24.0.0
         version: 24.12.2
