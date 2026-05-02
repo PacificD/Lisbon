@@ -1,6 +1,6 @@
-import type { NewsletterDraft } from '../domain/draft.ts'
-import type { ThemeSubscriber } from '../domain/subscriber.ts'
-import type { Theme } from '../domain/theme.ts'
+import type { NewsletterDraft } from '../domain/draft.js'
+import type { ThemeSubscriber } from '../domain/subscriber.js'
+import type { Theme } from '../domain/theme.js'
 
 export interface ThemeRepository {
   create(theme: Theme): Promise<Theme>

@@ -1,6 +1,6 @@
 import type { NewsletterConfig } from '@lisbon/shared/config'
 import type { WorkflowResult } from '@lisbon/shared/types'
-import type { Theme } from '../domain/theme.ts'
+import type { Theme } from '../domain/theme.js'
 
 export interface WorkflowRunner {
   metadata: {
