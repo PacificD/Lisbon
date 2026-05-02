@@ -1,0 +1,14 @@
+{
+  "name": "lisbon-newsletter",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@8.15.9",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.0"
+  }
+}
