@@ -32,7 +32,7 @@ export function createSendService(
     async approve({ themeSlug, issueDate, draftId, version, now = new Date().toISOString() }) {
       const theme = await getThemeBySlug(themeRepository, themeSlug)
       const drafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
-      const selectedDraft = await resolveDraftSelection({
+      const selectedDraft = await resolveApprovalSelection({
         draftId,
         draftRepository,
         drafts,
@@ -63,15 +63,15 @@ export function createSendService(
 
       const subscribers = await subscriberRepository.listByTheme(theme.id)
 
+      let sendResult: { providerMessageId: string }
+
       try {
-        const result = await emailSender.send({
+        sendResult = await emailSender.send({
           from: mailFrom,
           to: subscribers.map((subscriber) => subscriber.email),
           subject: selectedDraft.subject,
           html: selectedDraft.renderedHtml,
         })
-
-        return draftRepository.update(markDraftSent(selectedDraft, { now, providerMessageId: result.providerMessageId }))
       } catch (error) {
         const failedDraft = markDraftFailed(selectedDraft, {
           now,
@@ -81,6 +81,8 @@ export function createSendService(
         await draftRepository.update(failedDraft)
         throw error
       }
+
+      return draftRepository.update(markDraftSent(selectedDraft, { now, providerMessageId: sendResult.providerMessageId }))
     },
   }
 }
@@ -132,4 +134,72 @@ async function resolveDraftSelection(input: {
   }
 
   return latestApprovedDraft
+}
+
+async function resolveApprovalSelection(input: {
+  draftId?: string
+  draftRepository: DraftRepository
+  drafts: NewsletterDraft[]
+  issueDate: string
+  themeId: string
+  version?: number
+}): Promise<NewsletterDraft> {
+  const selectedDraft = await resolveDraftSelectionBySelector(input)
+
+  if (selectedDraft) {
+    return selectedDraft
+  }
+
+  const latestDraft = pickLatestApprovableDraft(input.drafts)
+
+  if (!latestDraft) {
+    throw new Error(`No draft exists for issue ${input.issueDate}.`)
+  }
+
+  return latestDraft
+}
+
+async function resolveDraftSelectionBySelector(input: {
+  draftId?: string
+  draftRepository: DraftRepository
+  drafts: NewsletterDraft[]
+  issueDate: string
+  themeId: string
+  version?: number
+}): Promise<NewsletterDraft | null> {
+  const { draftId, draftRepository, drafts, issueDate, themeId, version } = input
+
+  if (draftId) {
+    const draft = await draftRepository.findById(draftId)
+
+    if (!draft || draft.themeId !== themeId || draft.issueDate !== issueDate) {
+      throw new Error(`Draft ${draftId} was not found for the requested issue.`)
+    }
+
+    return draft
+  }
+
+  if (typeof version === 'number') {
+    const draft = drafts.find((candidate) => candidate.version === version)
+
+    if (!draft) {
+      throw new Error(`Draft version ${version} was not found for the requested issue.`)
+    }
+
+    return draft
+  }
+
+  return null
+}
+
+function pickLatestApprovableDraft(drafts: NewsletterDraft[]): NewsletterDraft | null {
+  const approvableDrafts = drafts.filter((draft) => draft.status === 'draft')
+
+  if (approvableDrafts.length === 0) {
+    return null
+  }
+
+  return approvableDrafts.reduce((latestDraft, draft) =>
+    draft.version > latestDraft.version ? draft : latestDraft,
+  )
 }

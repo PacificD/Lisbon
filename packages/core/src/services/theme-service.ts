@@ -46,7 +46,11 @@ export function createThemeService(
         throw new Error(`Theme ${slug} was not found.`)
       }
 
-      if (workflowName) {
+      if (workflowName !== undefined) {
+        if (workflowName.trim().length === 0) {
+          throw new Error('Workflow name cannot be empty.')
+        }
+
         assertWorkflowExists(workflowRegistry, workflowName)
       }
 

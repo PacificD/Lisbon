@@ -5,6 +5,7 @@ import type { NewsletterConfig, WorkflowResult } from '@lisbon/shared'
 import {
   createDraftService,
   createSendService,
+  createThemeService,
   ensureSendAllowed,
   getNextDraftVersion,
   pickLatestApprovedDraft,
@@ -185,6 +186,133 @@ describe('core draft helpers and services', () => {
       subject: 'Tech Daily v1',
       html: '<article data-theme="tech">Tech Daily v1</article>',
     })
+  })
+
+  it('approves the latest draft when no selector is provided', async () => {
+    const draftRepository = createDraftRepository([
+      makeDraft({
+        id: 'draft-1',
+        version: 1,
+        status: 'draft',
+        subject: 'Tech Daily v1',
+      }),
+      makeDraft({
+        id: 'draft-2',
+        version: 2,
+        status: 'draft',
+        subject: 'Tech Daily v2',
+      }),
+    ])
+
+    const service = createSendService(
+      createThemeRepository(),
+      createSubscriberRepository(),
+      draftRepository,
+      { async send() { return { providerMessageId: 'msg-unused' } } },
+      createDraftRenderer(),
+      config.MAIL_FROM,
+    )
+
+    const approved = await service.approve({
+      themeSlug: theme.slug,
+      issueDate: '2026-05-02',
+      now: '2026-05-02T09:00:00.000Z',
+    })
+
+    expect(approved.id).toBe('draft-2')
+    expect(approved.status).toBe('approved')
+  })
+
+  it('does not rewrite a successful provider send into failed when repository update fails', async () => {
+    let sendCalls = 0
+    let updateCalls = 0
+    const sentDraft = makeDraft({
+      id: 'draft-1',
+      version: 1,
+      status: 'approved',
+      approvedAt: '2026-05-02T08:30:00.000Z',
+      subject: 'Tech Daily v1',
+    })
+
+    const draftRepository: DraftRepository = {
+      async create() {
+        throw new Error('not used in test')
+      },
+      async listByThemeAndIssueDate() {
+        return [sentDraft]
+      },
+      async findById(id) {
+        return id === sentDraft.id ? sentDraft : null
+      },
+      async update() {
+        updateCalls += 1
+        throw new Error('database write failed')
+      },
+    }
+
+    const service = createSendService(
+      createThemeRepository(),
+      createSubscriberRepository(),
+      draftRepository,
+      {
+        async send() {
+          sendCalls += 1
+          return { providerMessageId: 'msg-1' }
+        },
+      },
+      createDraftRenderer(),
+      config.MAIL_FROM,
+    )
+
+    await expect(
+      service.send({
+        themeSlug: theme.slug,
+        issueDate: '2026-05-02',
+        draftId: sentDraft.id,
+        now: '2026-05-02T11:00:00.000Z',
+      }),
+    ).rejects.toThrow('database write failed')
+
+    expect(sendCalls).toBe(1)
+    expect(updateCalls).toBe(1)
+  })
+
+  it('rejects empty workflow names during theme updates', async () => {
+    const existingTheme = { ...theme }
+    const service = createThemeService(
+      {
+        async create() {
+          throw new Error('not used in test')
+        },
+        async findBySlug(slug) {
+          return slug === existingTheme.slug ? existingTheme : null
+        },
+        async list() {
+          return [existingTheme]
+        },
+        async update() {
+          throw new Error('should not persist invalid workflow names')
+        },
+      },
+      createWorkflowRegistry({
+        metadata: {
+          name: theme.workflowName,
+          displayName: 'Tech Daily',
+          description: 'Daily tech links',
+        },
+        async run() {
+          return workflowResult
+        },
+      }),
+    )
+
+    await expect(
+      service.updateTheme({
+        slug: theme.slug,
+        workflowName: '',
+        now: '2026-05-02T09:00:00.000Z',
+      }),
+    ).rejects.toThrow('Workflow name cannot be empty')
   })
 })
 
