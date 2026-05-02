@@ -86,13 +86,11 @@ export function createSendService(
         throw error
       }
 
-      return draftRepository.update({
-        ...markDraftSent(selectedDraft, {
-          now,
-          providerMessageId: sendResult.providerMessageId,
-        }),
-        sendProvider: sendResult.provider,
-      })
+      return draftRepository.update(markDraftSent(selectedDraft, {
+        now,
+        provider: sendResult.provider,
+        providerMessageId: sendResult.providerMessageId,
+      }))
     },
   }
 }

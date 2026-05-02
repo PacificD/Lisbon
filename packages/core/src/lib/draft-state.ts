@@ -32,7 +32,7 @@ export function approveDraft(draft: NewsletterDraft, now: string): NewsletterDra
 
 export function markDraftSent(
   draft: NewsletterDraft,
-  input: { now: string; providerMessageId: string },
+  input: { now: string; provider: 'resend'; providerMessageId: string },
 ): NewsletterDraft {
   if (draft.status !== 'approved') {
     throw new Error(`Only approved drafts can be sent. Received ${draft.status}.`)
@@ -42,7 +42,7 @@ export function markDraftSent(
     ...draft,
     status: 'sent',
     sentAt: input.now,
-    sendProvider: 'resend',
+    sendProvider: input.provider,
     providerMessageId: input.providerMessageId,
     errorMessage: null,
     updatedAt: input.now,
