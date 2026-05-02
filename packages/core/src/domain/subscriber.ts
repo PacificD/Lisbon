@@ -1,5 +1,6 @@
-import { SubscriberRecordSchema, type SubscriberRecord } from '../../../shared/src/schemas.ts'
-
-export function createSubscriberRecord(input: SubscriberRecord): SubscriberRecord {
-  return SubscriberRecordSchema.parse(input)
+export interface ThemeSubscriber {
+  id: string
+  themeId: string
+  email: string
+  createdAt: string
 }

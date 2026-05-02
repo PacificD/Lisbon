@@ -1,45 +1,34 @@
-import type {
-  ThemeRecord,
-  WorkflowMetadata,
-  WorkflowResult,
-} from '../../../shared/src/schemas.ts'
-import type { NewsletterConfig, SendProvider } from '../../../shared/src/types.ts'
+import type { NewsletterConfig } from '../../../shared/src/config.ts'
+import type { WorkflowResult } from '../../../shared/src/types.ts'
+import type { Theme } from '../domain/theme.ts'
 
-export interface Logger {
-  info(message: string, context?: Record<string, unknown>): void
-  warn(message: string, context?: Record<string, unknown>): void
-  error(message: string, context?: Record<string, unknown>): void
-}
-
-export interface WorkflowRunInput {
-  theme: ThemeRecord
-  issueDate: string
-  config: NewsletterConfig
-  logger: Logger
-}
-
-export interface WorkflowDefinition {
-  metadata: WorkflowMetadata
-  run(input: WorkflowRunInput): Promise<WorkflowResult>
+export interface WorkflowRunner {
+  metadata: {
+    name: string
+    displayName: string
+    description: string
+  }
+  run(input: {
+    theme: Theme
+    issueDate: string
+    config: NewsletterConfig
+  }): Promise<WorkflowResult>
 }
 
 export interface WorkflowRegistry {
-  getWorkflow(name: string): WorkflowDefinition | undefined
+  getWorkflow(name: string): WorkflowRunner | undefined
 }
 
-export interface EmailMessage {
-  from: string
-  to: string[]
-  subject: string
-  html: string
-  text?: string
-}
-
-export interface EmailSendResult {
-  provider: SendProvider
-  providerMessageId: string
+export interface DraftRenderer {
+  render(input: { theme: Theme; result: WorkflowResult }): string
 }
 
 export interface EmailSender {
-  send(message: EmailMessage): Promise<EmailSendResult>
+  send(message: {
+    from: string
+    to: string[]
+    subject: string
+    html: string
+    text?: string
+  }): Promise<{ providerMessageId: string }>
 }

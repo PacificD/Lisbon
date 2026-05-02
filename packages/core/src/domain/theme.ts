@@ -1,5 +1,9 @@
-import { ThemeRecordSchema, type ThemeRecord } from '../../../shared/src/schemas.ts'
-
-export function createThemeRecord(input: ThemeRecord): ThemeRecord {
-  return ThemeRecordSchema.parse(input)
+export interface Theme {
+  id: string
+  slug: string
+  name: string
+  workflowName: string
+  enabled: boolean
+  createdAt: string
+  updatedAt: string
 }
