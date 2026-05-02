@@ -27,46 +27,46 @@ function mapSubscriber(subscriber: ThemeSubscriber): ThemeSubscriberRow {
   }
 }
 
-export class SupabaseSubscriberRepository implements SubscriberRepository {
-  constructor(private readonly client: SupabaseClient) {}
+export function createSubscriberRepository(client: SupabaseClient): SubscriberRepository {
+  return {
+    async add(subscriber) {
+      const { data, error } = await client
+        .from('theme_subscribers')
+        .insert(mapSubscriber(subscriber))
+        .select()
+        .single()
 
-  async add(subscriber: ThemeSubscriber): Promise<ThemeSubscriber> {
-    const { data, error } = await this.client
-      .from('theme_subscribers')
-      .insert(mapSubscriber(subscriber))
-      .select()
-      .single()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return mapSubscriberRow(data as ThemeSubscriberRow)
+    },
 
-    return mapSubscriberRow(data as ThemeSubscriberRow)
-  }
+    async listByTheme(themeId) {
+      const { data, error } = await client
+        .from('theme_subscribers')
+        .select()
+        .eq('theme_id', themeId)
+        .order('created_at', { ascending: true })
 
-  async listByTheme(themeId: string): Promise<ThemeSubscriber[]> {
-    const { data, error } = await this.client
-      .from('theme_subscribers')
-      .select()
-      .eq('theme_id', themeId)
-      .order('created_at', { ascending: true })
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return (data as ThemeSubscriberRow[]).map(mapSubscriberRow)
+    },
 
-    return (data as ThemeSubscriberRow[]).map(mapSubscriberRow)
-  }
+    async remove(themeId, email) {
+      const { error } = await client
+        .from('theme_subscribers')
+        .delete()
+        .eq('theme_id', themeId)
+        .eq('email', email)
 
-  async remove(themeId: string, email: string): Promise<void> {
-    const { error } = await this.client
-      .from('theme_subscribers')
-      .delete()
-      .eq('theme_id', themeId)
-      .eq('email', email)
-
-    if (error) {
-      throw error
-    }
+      if (error) {
+        throw error
+      }
+    },
   }
 }

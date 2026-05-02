@@ -34,7 +34,8 @@ create table if not exists newsletter_drafts (
   provider_message_id text,
   error_message text,
   created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
+  updated_at timestamptz not null default timezone('utc', now()),
+  unique (theme_id, issue_date, version)
 );
 
-create unique index if not exists newsletter_drafts_one_sent_per_issue_idx on newsletter_drafts (theme_id, issue_date) where status = 'sent';
+create unique index if not exists newsletter_drafts_one_sent_per_issue on newsletter_drafts (theme_id, issue_date) where status = 'sent';

@@ -36,62 +36,62 @@ function mapTheme(theme: Theme): ThemeRow {
   }
 }
 
-export class SupabaseThemeRepository implements ThemeRepository {
-  constructor(private readonly client: SupabaseClient) {}
+export function createThemeRepository(client: SupabaseClient): ThemeRepository {
+  return {
+    async create(theme) {
+      const { data, error } = await client
+        .from('themes')
+        .insert(mapTheme(theme))
+        .select()
+        .single()
 
-  async create(theme: Theme): Promise<Theme> {
-    const { data, error } = await this.client
-      .from('themes')
-      .insert(mapTheme(theme))
-      .select()
-      .single()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return mapThemeRow(data as ThemeRow)
+    },
 
-    return mapThemeRow(data as ThemeRow)
-  }
+    async findBySlug(slug) {
+      const { data, error } = await client
+        .from('themes')
+        .select()
+        .eq('slug', slug)
+        .maybeSingle()
 
-  async findBySlug(slug: string): Promise<Theme | null> {
-    const { data, error } = await this.client
-      .from('themes')
-      .select()
-      .eq('slug', slug)
-      .maybeSingle()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return data ? mapThemeRow(data as ThemeRow) : null
+    },
 
-    return data ? mapThemeRow(data as ThemeRow) : null
-  }
+    async list() {
+      const { data, error } = await client
+        .from('themes')
+        .select()
+        .order('created_at', { ascending: true })
 
-  async list(): Promise<Theme[]> {
-    const { data, error } = await this.client
-      .from('themes')
-      .select()
-      .order('created_at', { ascending: true })
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return (data as ThemeRow[]).map(mapThemeRow)
+    },
 
-    return (data as ThemeRow[]).map(mapThemeRow)
-  }
+    async update(theme) {
+      const { data, error } = await client
+        .from('themes')
+        .update(mapTheme(theme))
+        .eq('id', theme.id)
+        .select()
+        .single()
 
-  async update(theme: Theme): Promise<Theme> {
-    const { data, error } = await this.client
-      .from('themes')
-      .update(mapTheme(theme))
-      .eq('id', theme.id)
-      .select()
-      .single()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
-
-    return mapThemeRow(data as ThemeRow)
+      return mapThemeRow(data as ThemeRow)
+    },
   }
 }

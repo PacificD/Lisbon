@@ -3,7 +3,7 @@ import {
   type SupabaseClient,
 } from '@supabase/supabase-js'
 
-export function createSupabaseClient(
+export function createSupabaseAdminClient(
   url: string,
   serviceRoleKey: string,
 ): SupabaseClient {

@@ -64,64 +64,64 @@ function mapDraft(draft: NewsletterDraft): NewsletterDraftRow {
   }
 }
 
-export class SupabaseDraftRepository implements DraftRepository {
-  constructor(private readonly client: SupabaseClient) {}
+export function createDraftRepository(client: SupabaseClient): DraftRepository {
+  return {
+    async create(draft) {
+      const { data, error } = await client
+        .from('newsletter_drafts')
+        .insert(mapDraft(draft))
+        .select()
+        .single()
 
-  async create(draft: NewsletterDraft): Promise<NewsletterDraft> {
-    const { data, error } = await this.client
-      .from('newsletter_drafts')
-      .insert(mapDraft(draft))
-      .select()
-      .single()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return mapDraftRow(data as NewsletterDraftRow)
+    },
 
-    return mapDraftRow(data as NewsletterDraftRow)
-  }
+    async listByThemeAndIssueDate(themeId, issueDate) {
+      const { data, error } = await client
+        .from('newsletter_drafts')
+        .select()
+        .eq('theme_id', themeId)
+        .eq('issue_date', issueDate)
+        .order('version', { ascending: false })
 
-  async listByThemeAndIssueDate(themeId: string, issueDate: string): Promise<NewsletterDraft[]> {
-    const { data, error } = await this.client
-      .from('newsletter_drafts')
-      .select()
-      .eq('theme_id', themeId)
-      .eq('issue_date', issueDate)
-      .order('version', { ascending: false })
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return (data as NewsletterDraftRow[]).map(mapDraftRow)
+    },
 
-    return (data as NewsletterDraftRow[]).map(mapDraftRow)
-  }
+    async findById(id) {
+      const { data, error } = await client
+        .from('newsletter_drafts')
+        .select()
+        .eq('id', id)
+        .maybeSingle()
 
-  async findById(id: string): Promise<NewsletterDraft | null> {
-    const { data, error } = await this.client
-      .from('newsletter_drafts')
-      .select()
-      .eq('id', id)
-      .maybeSingle()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
+      return data ? mapDraftRow(data as NewsletterDraftRow) : null
+    },
 
-    return data ? mapDraftRow(data as NewsletterDraftRow) : null
-  }
+    async update(draft) {
+      const { data, error } = await client
+        .from('newsletter_drafts')
+        .update(mapDraft(draft))
+        .eq('id', draft.id)
+        .select()
+        .single()
 
-  async update(draft: NewsletterDraft): Promise<NewsletterDraft> {
-    const { data, error } = await this.client
-      .from('newsletter_drafts')
-      .update(mapDraft(draft))
-      .eq('id', draft.id)
-      .select()
-      .single()
+      if (error) {
+        throw error
+      }
 
-    if (error) {
-      throw error
-    }
-
-    return mapDraftRow(data as NewsletterDraftRow)
+      return mapDraftRow(data as NewsletterDraftRow)
+    },
   }
 }

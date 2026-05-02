@@ -14,18 +14,21 @@ describe('db package contract', () => {
   })
 
   it('exports a client factory and repository implementations that match the core ports', async () => {
-    const { createSupabaseClient } = await import('../../packages/db/src/client.ts')
-    const { SupabaseThemeRepository } = await import(
+    const { createSupabaseAdminClient } = await import('../../packages/db/src/client.ts')
+    const { createThemeRepository } = await import(
       '../../packages/db/src/repositories/theme-repository.ts'
     )
-    const { SupabaseSubscriberRepository } = await import(
+    const { createSubscriberRepository } = await import(
       '../../packages/db/src/repositories/subscriber-repository.ts'
     )
-    const { SupabaseDraftRepository } = await import(
+    const { createDraftRepository } = await import(
       '../../packages/db/src/repositories/draft-repository.ts'
     )
 
-    expect(createSupabaseClient).toBeTypeOf('function')
+    expect(createSupabaseAdminClient).toBeTypeOf('function')
+    expect(createThemeRepository).toBeTypeOf('function')
+    expect(createSubscriberRepository).toBeTypeOf('function')
+    expect(createDraftRepository).toBeTypeOf('function')
 
     const fakeClient = {
       from: () => {
@@ -33,9 +36,9 @@ describe('db package contract', () => {
       },
     }
 
-    const themeRepository = new SupabaseThemeRepository(fakeClient as never)
-    const subscriberRepository = new SupabaseSubscriberRepository(fakeClient as never)
-    const draftRepository = new SupabaseDraftRepository(fakeClient as never)
+    const themeRepository = createThemeRepository(fakeClient as never)
+    const subscriberRepository = createSubscriberRepository(fakeClient as never)
+    const draftRepository = createDraftRepository(fakeClient as never)
 
     expect(themeRepository.create).toBeTypeOf('function')
     expect(themeRepository.findBySlug).toBeTypeOf('function')
@@ -67,10 +70,11 @@ describe('db package contract', () => {
     expect(sql).toContain('create table if not exists newsletter_drafts')
     expect(sql).toContain("status text not null check (status in ('draft', 'approved', 'sent', 'failed'))")
     expect(sql).toContain('version integer not null')
+    expect(sql).toContain('unique (theme_id, issue_date, version)')
     expect(sql).toContain('draft_payload_json jsonb not null')
     expect(sql).toContain('rendered_html text not null')
     expect(sql).toContain(
-      "create unique index if not exists newsletter_drafts_one_sent_per_issue_idx on newsletter_drafts (theme_id, issue_date) where status = 'sent'",
+      "create unique index if not exists newsletter_drafts_one_sent_per_issue on newsletter_drafts (theme_id, issue_date) where status = 'sent'",
     )
   })
 })
