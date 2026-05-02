@@ -1,0 +1,14 @@
+{
+  "name": "@lisbon/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./config": "./src/config.ts",
+    "./types": "./src/types.ts",
+    "./schemas": "./src/schemas.ts"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  }
+}
