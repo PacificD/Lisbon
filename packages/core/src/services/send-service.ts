@@ -44,7 +44,7 @@ export function createSendService(
       const approvedDraft = approveDraftState(
         {
           ...selectedDraft,
-          renderedHtml: draftRenderer.render({
+          renderedHtml: await draftRenderer.renderHtml({
             theme,
             result: selectedDraft.draftPayload,
           }),
@@ -63,7 +63,7 @@ export function createSendService(
 
       const subscribers = await subscriberRepository.listByTheme(theme.id)
 
-      let sendResult: { providerMessageId: string }
+      let sendResult: { provider: 'resend'; providerMessageId: string }
 
       try {
         sendResult = await emailSender.send({
@@ -71,6 +71,10 @@ export function createSendService(
           to: subscribers.map((subscriber) => subscriber.email),
           subject: selectedDraft.subject,
           html: selectedDraft.renderedHtml,
+          text: draftRenderer.renderText({
+            theme,
+            result: selectedDraft.draftPayload,
+          }),
         })
       } catch (error) {
         const failedDraft = markDraftFailed(selectedDraft, {
@@ -82,7 +86,13 @@ export function createSendService(
         throw error
       }
 
-      return draftRepository.update(markDraftSent(selectedDraft, { now, providerMessageId: sendResult.providerMessageId }))
+      return draftRepository.update({
+        ...markDraftSent(selectedDraft, {
+          now,
+          providerMessageId: sendResult.providerMessageId,
+        }),
+        sendProvider: sendResult.provider,
+      })
     },
   }
 }

@@ -35,7 +35,7 @@ export function createDraftService(
 
       const existingDrafts = await draftRepository.listByThemeAndIssueDate(theme.id, issueDate)
       const result = await workflow.run({ theme, issueDate, config })
-      const renderedHtml = draftRenderer.render({ theme, result })
+      const renderedHtml = await draftRenderer.renderHtml({ theme, result })
 
       return draftRepository.create({
         id: randomUUID(),

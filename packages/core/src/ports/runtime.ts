@@ -19,7 +19,9 @@ export interface WorkflowRegistry {
 }
 
 export interface DraftRenderer {
-  render(input: { theme: Theme; result: WorkflowResult }): string
+  render(input: { theme: Theme; result: WorkflowResult }): Promise<string>
+  renderHtml(input: { theme: Theme; result: WorkflowResult }): Promise<string>
+  renderText(input: { theme: Theme; result: WorkflowResult }): string
 }
 
 export interface EmailSender {
@@ -29,5 +31,5 @@ export interface EmailSender {
     subject: string
     html: string
     text?: string
-  }): Promise<{ providerMessageId: string }>
+  }): Promise<{ provider: 'resend'; providerMessageId: string }>
 }

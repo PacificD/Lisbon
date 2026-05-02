@@ -7,7 +7,7 @@
     ".": "./src/render.ts"
   },
   "scripts": {
-    "typecheck": "pnpm exec tsc --noEmit -p ../../tsconfig.base.json"
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@lisbon/core": "workspace:*",

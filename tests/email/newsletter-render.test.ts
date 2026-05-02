@@ -38,7 +38,7 @@ describe('newsletter email rendering', () => {
     expect(rendered.html).toContain('Shipping React compiler-friendly component APIs')
     expect(rendered.text).toContain('Frontend: Frontend Daily for 2026-05-02')
     expect(rendered.text).toContain('Tags: react, performance')
-    expect(await draftRenderer.render({
+    expect(await draftRenderer.renderHtml({
       theme: {
         id: 'theme-frontend',
         slug: 'frontend',
@@ -62,5 +62,29 @@ describe('newsletter email rendering', () => {
         ],
       },
     })).toContain('Frontend Daily for 2026-05-02')
+    expect(draftRenderer.renderText({
+      theme: {
+        id: 'theme-frontend',
+        slug: 'frontend',
+        name: 'Frontend',
+        workflowName: 'frontend-daily',
+        enabled: true,
+        createdAt: '2026-05-02T00:00:00.000Z',
+        updatedAt: '2026-05-02T00:00:00.000Z',
+      },
+      result: {
+        subject: 'Frontend Daily for 2026-05-02',
+        previewText: 'Three frontend links worth reviewing today.',
+        intro: 'A compact issue covering platform, tooling, and design system updates.',
+        items: [
+          {
+            title: 'Shipping React compiler-friendly component APIs',
+            source: 'React Notes',
+            url: 'https://example.com/react-compiler-apis',
+            summary: 'Small API constraints now can prevent expensive rewrites when compiler adoption expands.',
+          },
+        ],
+      },
+    })).toContain('Frontend: Frontend Daily for 2026-05-02')
   })
 })

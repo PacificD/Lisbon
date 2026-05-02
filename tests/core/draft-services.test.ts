@@ -152,7 +152,7 @@ describe('core draft helpers and services', () => {
         async send(message) {
           sendCalls += 1
           sentMessage = message
-          return { providerMessageId: 'msg-2' }
+          return { provider: 'resend', providerMessageId: 'msg-2' }
         },
       },
       createDraftRenderer(),
@@ -179,12 +179,14 @@ describe('core draft helpers and services', () => {
 
     expect(sent.status).toBe('sent')
     expect(sent.id).toBe('draft-1')
+    expect(sent.sendProvider).toBe('resend')
     expect(sendCalls).toBe(1)
     expect(sentMessage).toEqual({
       from: config.MAIL_FROM,
       to: ['reader@example.com'],
       subject: 'Tech Daily v1',
       html: '<article data-theme="tech">Tech Daily v1</article>',
+      text: 'Tech: Tech Daily v1',
     })
   })
 
@@ -208,7 +210,7 @@ describe('core draft helpers and services', () => {
       createThemeRepository(),
       createSubscriberRepository(),
       draftRepository,
-      { async send() { return { providerMessageId: 'msg-unused' } } },
+      { async send() { return { provider: 'resend', providerMessageId: 'msg-unused' } } },
       createDraftRenderer(),
       config.MAIL_FROM,
     )
@@ -257,7 +259,7 @@ describe('core draft helpers and services', () => {
       {
         async send() {
           sendCalls += 1
-          return { providerMessageId: 'msg-1' }
+          return { provider: 'resend', providerMessageId: 'msg-1' }
         },
       },
       createDraftRenderer(),
@@ -383,7 +385,10 @@ function createSubscriberRepository(): SubscriberRepository {
 function createDraftRenderer(): DraftRenderer {
   return {
     render: ({ theme: currentTheme, result }) =>
-      `<article data-theme="${currentTheme.slug}">${result.subject}</article>`,
+      Promise.resolve(`<article data-theme="${currentTheme.slug}">${result.subject}</article>`),
+    renderHtml: ({ theme: currentTheme, result }) =>
+      Promise.resolve(`<article data-theme="${currentTheme.slug}">${result.subject}</article>`),
+    renderText: ({ theme: currentTheme, result }) => `${currentTheme.name}: ${result.subject}`,
   }
 }
 
