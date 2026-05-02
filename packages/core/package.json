@@ -6,6 +6,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.json"
+  },
   "dependencies": {
     "@lisbon/shared": "workspace:*"
   }
