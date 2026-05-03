@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 
-export function registerThemeRoutes(app: Hono) {
+export function registerThemeRoutes(app: Hono, _runtime: { themeService?: unknown }) {
   app.get('/themes', notImplemented)
   app.post('/themes', notImplemented)
   app.patch('/themes/:slug', notImplemented)

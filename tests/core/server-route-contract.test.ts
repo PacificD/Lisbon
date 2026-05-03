@@ -3,8 +3,16 @@ import { describe, expect, it } from 'vitest'
 import { createServerApp } from '../../apps/server/src/app.ts'
 
 describe('local server route shell', () => {
+  it('responds to GET /health', async () => {
+    const app = createServerApp({})
+    const response = await app.request('/health')
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual({ ok: true })
+  })
+
   it('registers the planned route surfaces with placeholder handlers', async () => {
-    const app = createServerApp()
+    const app = createServerApp({})
 
     const cases = [
       { method: 'GET', path: '/themes' },
@@ -33,7 +41,7 @@ describe('local server route shell', () => {
   })
 
   it('keeps unknown routes returning 404', async () => {
-    const app = createServerApp()
+    const app = createServerApp({})
     const response = await app.request('/missing')
 
     expect(response.status).toBe(404)

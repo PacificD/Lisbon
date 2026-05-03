@@ -24,7 +24,7 @@ export function resolvePort(env: NodeJS.ProcessEnv = process.env): number {
 
 export function main(env: NodeJS.ProcessEnv = process.env): number {
   const port = resolvePort(env)
-  const app = createServerApp()
+  const app = createServerApp({})
 
   serve({
     fetch: app.fetch,

@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 
-export function registerDraftRoutes(app: Hono) {
+export function registerDraftRoutes(app: Hono, _runtime: { draftService?: unknown; sendService?: unknown }) {
   app.post('/drafts/generate', notImplemented)
   app.get('/drafts/:themeSlug/:issueDate', notImplemented)
   app.get('/drafts/:draftId', notImplemented)

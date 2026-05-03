@@ -1,6 +1,6 @@
 import type { Hono } from 'hono'
 
-export function registerSendRoutes(app: Hono) {
+export function registerSendRoutes(app: Hono, _runtime: { sendService?: unknown }) {
   app.post('/send', notImplemented)
 }
 
