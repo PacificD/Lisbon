@@ -5,6 +5,7 @@ import {
   parseArgs,
   parseDraftSelector,
   pickDraft,
+  requireIssueDate,
   requireOption,
   resolveIssueDate,
 } from './types.js'
@@ -65,7 +66,7 @@ async function showDraft(argv: string[], runtime: Parameters<CommandModule['run'
   assertNoPositionals(parsedArgs)
 
   const themeSlug = requireOption(parsedArgs, 'theme')
-  const issueDate = resolveIssueDate(parsedArgs, runtime)
+  const issueDate = requireIssueDate(parsedArgs)
   const drafts = await runtime.draftService.list({
     themeSlug,
     issueDate,
@@ -98,7 +99,7 @@ async function approveDraft(argv: string[], runtime: Parameters<CommandModule['r
   assertNoPositionals(parsedArgs)
 
   const themeSlug = requireOption(parsedArgs, 'theme')
-  const issueDate = resolveIssueDate(parsedArgs, runtime)
+  const issueDate = requireIssueDate(parsedArgs)
   const selector = parseDraftSelector(parsedArgs)
   const draft = await runtime.sendService.approve({
     themeSlug,

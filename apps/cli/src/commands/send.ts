@@ -1,5 +1,5 @@
 import type { CommandModule } from './types.js'
-import { assertNoPositionals, hasFlag, parseArgs, parseDraftSelector, requireOption, resolveIssueDate } from './types.js'
+import { assertNoPositionals, hasFlag, parseArgs, parseDraftSelector, requireIssueDate, requireOption } from './types.js'
 
 export const sendCommand: CommandModule = {
   async run(argv, runtime) {
@@ -19,7 +19,7 @@ async function sendIssue(argv: string[], runtime: Parameters<CommandModule['run'
   assertNoPositionals(parsedArgs)
 
   const themeSlug = requireOption(parsedArgs, 'theme')
-  const issueDate = resolveIssueDate(parsedArgs, runtime)
+  const issueDate = requireIssueDate(parsedArgs)
   const selector = parseDraftSelector(parsedArgs)
 
   if (!hasFlag(parsedArgs, 'yes')) {

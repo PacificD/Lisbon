@@ -95,6 +95,10 @@ export function parseNumberOption(parsedArgs: ParsedArgs, name: string): number 
     return undefined
   }
 
+  if (!/^-?\d+$/.test(value)) {
+    throw new Error(`Option --${name} must be an integer.`)
+  }
+
   const parsedValue = Number.parseInt(value, 10)
 
   if (!Number.isInteger(parsedValue)) {
@@ -112,6 +116,10 @@ export function assertNoPositionals(parsedArgs: ParsedArgs): void {
 
 export function resolveIssueDate(parsedArgs: ParsedArgs, runtime: CliRuntime): string {
   return optionalOption(parsedArgs, 'date') ?? runtime.getDefaultIssueDate()
+}
+
+export function requireIssueDate(parsedArgs: ParsedArgs): string {
+  return requireOption(parsedArgs, 'date')
 }
 
 export function parseDraftSelector(parsedArgs: ParsedArgs): DraftSelector {

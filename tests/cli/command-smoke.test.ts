@@ -22,6 +22,36 @@ describe('CLI command smoke test', () => {
     expect(buildCli()).toContain('send issue')
   })
 
+  it('requires explicit issue dates for show, approve, and send commands', async () => {
+    const runtime = createRuntimeDouble({
+      calls: [],
+      previewOutputDir: mkdtempSync(join(tmpdir(), 'lisbon-cli-dates-')),
+    })
+    const app = createCliApp(runtime)
+
+    await expect(app.run(['draft', 'show', '--theme', 'tech'])).rejects.toThrow(
+      'Missing required option --date.',
+    )
+    await expect(app.run(['draft', 'approve', '--theme', 'tech'])).rejects.toThrow(
+      'Missing required option --date.',
+    )
+    await expect(app.run(['send', 'issue', '--theme', 'tech', '--yes'])).rejects.toThrow(
+      'Missing required option --date.',
+    )
+  })
+
+  it('rejects malformed numeric draft selectors', async () => {
+    const runtime = createRuntimeDouble({
+      calls: [],
+      previewOutputDir: mkdtempSync(join(tmpdir(), 'lisbon-cli-version-')),
+    })
+    const app = createCliApp(runtime)
+
+    await expect(
+      app.run(['draft', 'show', '--theme', 'tech', '--date', '2026-05-03', '--version', '2abc']),
+    ).rejects.toThrow('Option --version must be an integer.')
+  })
+
   it('routes core commands and writes draft previews', async () => {
     const previewOutputDir = mkdtempSync(join(tmpdir(), 'lisbon-cli-smoke-'))
     previewDirs.push(previewOutputDir)
