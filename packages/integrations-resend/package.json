@@ -1,0 +1,16 @@
+{
+  "name": "@lisbon/integrations-resend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/sender.ts"
+  },
+  "scripts": {
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@lisbon/core": "workspace:*",
+    "resend": "^6.3.0"
+  }
+}

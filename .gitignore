@@ -1,2 +1,9 @@
 node_modules
 .worktrees
+.tmp
+.env
+.env.*
+!.env.example
+coverage
+dist
+*.tsbuildinfo

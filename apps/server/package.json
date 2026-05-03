@@ -1,0 +1,22 @@
+{
+  "name": "@lisbon/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.6",
+    "@lisbon/core": "workspace:*",
+    "@lisbon/db": "workspace:*",
+    "@lisbon/email": "workspace:*",
+    "@lisbon/integrations-resend": "workspace:*",
+    "@lisbon/shared": "workspace:*",
+    "@lisbon/workflows": "workspace:*",
+    "hono": "^4.10.1"
+  }
+}

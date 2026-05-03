@@ -1,0 +1,21 @@
+{
+  "name": "@lisbon/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./repositories/theme": "./src/repositories/theme-repository.ts",
+    "./repositories/subscriber": "./src/repositories/subscriber-repository.ts",
+    "./repositories/draft": "./src/repositories/draft-repository.ts",
+    "./sql/001_initial_schema.sql": "./src/sql/001_initial_schema.sql"
+  },
+  "scripts": {
+    "typecheck": "pnpm exec tsc --noEmit"
+  },
+  "dependencies": {
+    "@lisbon/core": "workspace:*",
+    "@lisbon/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.105.1"
+  }
+}
