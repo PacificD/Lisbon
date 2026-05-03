@@ -42,7 +42,7 @@ export function createSubscriberRepository(client: SupabaseClient): SubscriberRe
         .from('theme_subscribers')
         .select()
         .eq('theme_id', themeId)
-        .order('created_at', { ascending: true })
+        .order('email', { ascending: true })
 
       if (error) {
         throw error

@@ -62,7 +62,7 @@ export function createThemeRepository(client: SupabaseClient): ThemeRepository {
       const { data, error } = await client
         .from('themes')
         .select()
-        .order('created_at', { ascending: true })
+        .order('slug', { ascending: true })
 
       if (error) {
         throw error
@@ -78,7 +78,7 @@ export function createThemeRepository(client: SupabaseClient): ThemeRepository {
           ...(patch.name !== undefined ? { name: patch.name } : {}),
           ...(patch.workflowName !== undefined ? { workflow_name: patch.workflowName } : {}),
           ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
-          updated_at: patch.updatedAt ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq('slug', slug)
         .select()

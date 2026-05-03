@@ -33,7 +33,7 @@ export function createThemeService(
       return themeRepository.list()
     },
 
-    async updateTheme({ slug, name, workflowName, enabled, now = new Date().toISOString() }) {
+    async updateTheme({ slug, name, workflowName, enabled }) {
       const existingTheme = await themeRepository.findBySlug(slug)
 
       if (!existingTheme) {
@@ -52,7 +52,6 @@ export function createThemeService(
         ...(name !== undefined ? { name } : {}),
         ...(workflowName !== undefined ? { workflowName } : {}),
         ...(enabled !== undefined ? { enabled } : {}),
-        updatedAt: now,
       })
     },
   }

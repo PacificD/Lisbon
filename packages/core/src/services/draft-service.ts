@@ -70,7 +70,6 @@ export function createDraftService(
         status: approvedDraft.status,
         approvedAt: approvedDraft.approvedAt,
         errorMessage: approvedDraft.errorMessage,
-        updatedAt: approvedDraft.updatedAt,
       })
     },
 

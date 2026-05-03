@@ -44,20 +44,14 @@ export function createSendService(
       const approvedDraft = approveDraftState(
         {
           ...selectedDraft,
-          renderedHtml: await draftRenderer.renderHtml({
-            theme,
-            result: selectedDraft.draftPayload,
-          }),
         },
         now,
       )
 
       return draftRepository.updateStatus(approvedDraft.id, {
         status: approvedDraft.status,
-        renderedHtml: approvedDraft.renderedHtml,
         approvedAt: approvedDraft.approvedAt,
         errorMessage: approvedDraft.errorMessage,
-        updatedAt: approvedDraft.updatedAt,
       })
     },
 
@@ -91,7 +85,6 @@ export function createSendService(
         await draftRepository.updateStatus(failedDraft.id, {
           status: failedDraft.status,
           errorMessage: failedDraft.errorMessage,
-          updatedAt: failedDraft.updatedAt,
         })
         throw error
       }
@@ -108,7 +101,6 @@ export function createSendService(
         sendProvider: sentDraft.sendProvider,
         providerMessageId: sentDraft.providerMessageId,
         errorMessage: sentDraft.errorMessage,
-        updatedAt: sentDraft.updatedAt,
       })
     },
   }

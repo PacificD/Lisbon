@@ -114,13 +114,12 @@ export function createDraftRepository(client: SupabaseClient): DraftRepository {
         .from('newsletter_drafts')
         .update({
           status: input.status,
-          ...(input.renderedHtml !== undefined ? { rendered_html: input.renderedHtml } : {}),
           ...(input.approvedAt !== undefined ? { approved_at: input.approvedAt } : {}),
           ...(input.sentAt !== undefined ? { sent_at: input.sentAt } : {}),
           ...(input.sendProvider !== undefined ? { send_provider: input.sendProvider } : {}),
           ...(input.providerMessageId !== undefined ? { provider_message_id: input.providerMessageId } : {}),
           ...(input.errorMessage !== undefined ? { error_message: input.errorMessage } : {}),
-          updated_at: input.updatedAt ?? new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq('id', id)
         .select()

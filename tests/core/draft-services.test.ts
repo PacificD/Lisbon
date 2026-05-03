@@ -168,7 +168,7 @@ describe('core draft helpers and services', () => {
 
     expect(approved.status).toBe('approved')
     expect(approved.approvedAt).toBe('2026-05-02T09:00:00.000Z')
-    expect(approved.renderedHtml).toContain('Tech Daily v1')
+    expect(approved.renderedHtml).toBe('<article>Tech Daily</article>')
 
     const sent = await service.send({
       themeSlug: theme.slug,
@@ -185,7 +185,7 @@ describe('core draft helpers and services', () => {
       from: config.MAIL_FROM,
       to: ['reader@example.com'],
       subject: 'Tech Daily v1',
-      html: '<article data-theme="tech">Tech Daily v1</article>',
+      html: '<article>Tech Daily</article>',
       text: 'Tech: Tech Daily v1',
     })
   })

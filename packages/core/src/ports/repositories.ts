@@ -12,7 +12,6 @@ export interface ThemeRepository {
       name?: string
       workflowName?: string
       enabled?: boolean
-      updatedAt?: string
     },
   ): Promise<Theme>
 }
@@ -48,13 +47,11 @@ export interface DraftRepository {
     id: string,
     input: {
       status: NewsletterDraft['status']
-      renderedHtml?: string
       approvedAt?: string | null
       sentAt?: string | null
       sendProvider?: NewsletterDraft['sendProvider']
       providerMessageId?: string | null
       errorMessage?: string | null
-      updatedAt?: string
     },
   ): Promise<NewsletterDraft>
 }
