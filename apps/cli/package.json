@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
@@ -12,6 +15,7 @@
     "@lisbon/email": "workspace:*",
     "@lisbon/integrations-resend": "workspace:*",
     "@lisbon/shared": "workspace:*",
-    "@lisbon/workflows": "workspace:*"
+    "@lisbon/workflows": "workspace:*",
+    "ink": "^6.8.0"
   }
 }

@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { createCliApp } from '../../apps/cli/src/app.tsx'
+import { buildCli } from '../../apps/cli/src/index.ts'
 import type { CliRuntime } from '../../apps/cli/src/runtime.ts'
 
 describe('CLI command smoke test', () => {
@@ -14,6 +15,11 @@ describe('CLI command smoke test', () => {
     for (const directory of previewDirs.splice(0)) {
       rmSync(directory, { force: true, recursive: true })
     }
+  })
+
+  it('exposes the planned command list', () => {
+    expect(buildCli()).toContain('theme list')
+    expect(buildCli()).toContain('send issue')
   })
 
   it('routes core commands and writes draft previews', async () => {
