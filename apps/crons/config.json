@@ -1,0 +1,13 @@
+{
+  "timezone": "Asia/Shanghai",
+  "recipients": ["you@example.com"],
+  "tasks": [
+    {
+      "name": "daily-us-market-overview",
+      "hhmm": "0800",
+      "enabled": true,
+      "prompt": "prompts/daily-us-market-overview.md",
+      "transformPrompt": "prompts/market-md-to-newsletter-json.md"
+    }
+  ]
+}

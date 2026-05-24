@@ -1,0 +1,19 @@
+{
+  "name": "@lisbon/crons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "task": "tsx src/index.ts task",
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@lisbon/email": "workspace:*",
+    "@lisbon/integrations-resend": "workspace:*",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
