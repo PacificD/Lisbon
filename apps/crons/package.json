@@ -8,6 +8,7 @@
     "typecheck": "pnpm exec tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@lisbon/core": "workspace:*",
     "@lisbon/email": "workspace:*",
     "@lisbon/integrations-resend": "workspace:*",
     "zod": "^3.25.0"

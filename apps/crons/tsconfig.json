@@ -1,8 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "jsx": "react",
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {}
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "../../packages/email/src/**/*.d.ts"]
 }

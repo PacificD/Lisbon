@@ -47,6 +47,9 @@ importers:
 
   apps/crons:
     dependencies:
+      '@lisbon/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@lisbon/email':
         specifier: workspace:*
         version: link:../../packages/email
